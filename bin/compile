@@ -30,15 +30,15 @@ export_env_dir() {
   fi
 }
 
-# Install required dependencies first
-topic "Installing build dependencies"
-apt_deps="build-essential autoconf automake libtool pkg-config libssl-dev libicu-dev"
-for dep in $apt_deps; do
-  if ! dpkg -s $dep > /dev/null 2>&1; then
-    apt-get update -qq > /dev/null 2>&1
-    apt-get install -qq -y --no-install-recommends $dep > /dev/null 2>&1
-  fi
-done
+# Set up environment for build
+topic "Setting up build environment"
+
+# Ensure we have proper C headers and paths
+export CPATH="/usr/include:/usr/local/include:$CPATH"
+export LIBRARY_PATH="/usr/lib:/usr/local/lib:$LIBRARY_PATH"
+export LD_LIBRARY_PATH="/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH"
+export C_INCLUDE_PATH="/usr/include:/usr/local/include:$C_INCLUDE_PATH"
+export CPLUS_INCLUDE_PATH="/usr/include:/usr/local/include:$CPLUS_INCLUDE_PATH"
 
 mkdir -p "$BUILD_DIR/.heroku/vendor"
 VENDOR_DIR="$BUILD_DIR/.heroku/vendor"
@@ -78,12 +78,14 @@ fi
 # Configure with prefix
 if [ ! -f "Makefile" ]; then
   topic "Configuring libpostal"
-  ./configure --prefix=$LIBPOSTAL_PREFIX --datadir=$LIBPOSTAL_PREFIX/data | indent
+  # Add CFLAGS to ensure proper include paths
+  CFLAGS="-I/usr/include -I/usr/local/include" ./configure --prefix=$LIBPOSTAL_PREFIX --datadir=$LIBPOSTAL_PREFIX/data | indent
 fi
 
 # Make and install
 topic "Compiling libpostal"
-make -j4 | indent
+# Add explicit includes for stdint.h in CFLAGS
+CFLAGS="-I/usr/include -I/usr/local/include -include stdint.h" make -j4 | indent
 topic "Installing libpostal"
 make install | indent
 
