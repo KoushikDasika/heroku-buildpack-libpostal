@@ -92,8 +92,8 @@ make install | indent
 # Download the libpostal data if needed
 topic "Downloading libpostal data files"
 mkdir -p $LIBPOSTAL_PREFIX/data
-cd $LIBPOSTAL_PREFIX/data
-$VENDOR_DIR/libpostal/bin/libpostal_data download all | indent
+cd $LIBPOSTAL_PREFIX
+$VENDOR_DIR/libpostal/bin/libpostal_data download all $LIBPOSTAL_PREFIX/data
 
 # Creating .profile.d script for runtime environment
 mkdir -p "$BUILD_DIR/.profile.d"
