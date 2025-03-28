@@ -30,6 +30,16 @@ export_env_dir() {
   fi
 }
 
+# Install required dependencies first
+topic "Installing build dependencies"
+apt_deps="build-essential autoconf automake libtool pkg-config libssl-dev libicu-dev"
+for dep in $apt_deps; do
+  if ! dpkg -s $dep > /dev/null 2>&1; then
+    apt-get update -qq > /dev/null 2>&1
+    apt-get install -qq -y --no-install-recommends $dep > /dev/null 2>&1
+  fi
+done
+
 mkdir -p "$BUILD_DIR/.heroku/vendor"
 VENDOR_DIR="$BUILD_DIR/.heroku/vendor"
 
