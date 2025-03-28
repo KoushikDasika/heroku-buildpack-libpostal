@@ -1,0 +1,16 @@
+[buildpack]
+name = "libpostal"
+description = "Heroku buildpack for installing libpostal, a library for parsing/normalizing street addresses"
+version = "0.1.0"
+
+[metadata]
+support_url = "https://github.com/yourusername/heroku-buildpack-libpostal/issues"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
+
+[[stacks]]
+id = "heroku-24"
