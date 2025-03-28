@@ -75,11 +75,16 @@ if [ ! -f "configure" ]; then
   ./bootstrap.sh | indent
 fi
 
-# Configure with prefix
+# Configure with prefix - use minimal data download
 if [ ! -f "Makefile" ]; then
-  topic "Configuring libpostal"
-  # Add CFLAGS to ensure proper include paths
-  CFLAGS="-I/usr/include -I/usr/local/include" ./configure --prefix=$LIBPOSTAL_PREFIX --datadir=$LIBPOSTAL_PREFIX/data | indent
+  topic "Configuring libpostal with minimal data"
+  # Configure with minimal data download flags
+  CFLAGS="-I/usr/include -I/usr/local/include" ./configure \
+    --prefix=$LIBPOSTAL_PREFIX \
+    --datadir=$LIBPOSTAL_PREFIX/data \
+    --disable-data-download \
+    --disable-address-expansions \
+    | indent
 fi
 
 # Make and install
@@ -89,22 +94,18 @@ CFLAGS="-I/usr/include -I/usr/local/include -include stdint.h" make -j4 | indent
 topic "Installing libpostal"
 make install | indent
 
-# Download the libpostal data if needed - only US-specific data files
-topic "Downloading US-specific libpostal data files"
+# Download only the absolute minimum required data
+topic "Downloading minimal libpostal data files"
 mkdir -p $LIBPOSTAL_PREFIX/data
 cd $LIBPOSTAL_PREFIX
 
-# Download only the base parser and language classifier
-topic "Downloading base language classifier"
-$VENDOR_DIR/libpostal/bin/libpostal_data download language_classifier $LIBPOSTAL_PREFIX/data
-
-topic "Downloading base address parser"
+# Download only the parser model (absolute minimum)
+topic "Downloading address parser model only"
 $VENDOR_DIR/libpostal/bin/libpostal_data download parser $LIBPOSTAL_PREFIX/data
 
-# Download only US-specific data
-topic "Downloading US-specific data"
-$VENDOR_DIR/libpostal/bin/libpostal_data download language_classifier en $LIBPOSTAL_PREFIX/data
-$VENDOR_DIR/libpostal/bin/libpostal_data download country us $LIBPOSTAL_PREFIX/data
+# Optional - only if the parser alone doesn't work
+# topic "Downloading English language classifier"
+# $VENDOR_DIR/libpostal/bin/libpostal_data download language_classifier en $LIBPOSTAL_PREFIX/data
 
 # Creating .profile.d script for runtime environment
 mkdir -p "$BUILD_DIR/.profile.d"
