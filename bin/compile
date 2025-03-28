@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
+
+set -e
+set -o pipefail
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+BUILDPACK_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+
+function indent() {
+  sed -u 's/^/       /'
+}
+
+function topic() {
+  echo "-----> $*"
+}
+
+export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-''}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH|LANG|DYNO)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+mkdir -p "$BUILD_DIR/.heroku/vendor"
+VENDOR_DIR="$BUILD_DIR/.heroku/vendor"
+
+# Export environment variables
+export_env_dir "$ENV_DIR"
+
+# Set up paths for libpostal
+export LIBPOSTAL_PREFIX="$VENDOR_DIR/libpostal"
+mkdir -p $LIBPOSTAL_PREFIX
+
+# Download and install libpostal
+LIBPOSTAL_VERSION="1.1.0"
+LIBPOSTAL_FILE="v$LIBPOSTAL_VERSION.tar.gz"
+
+topic "Installing libpostal $LIBPOSTAL_VERSION"
+
+cd $CACHE_DIR
+if [ ! -f $LIBPOSTAL_FILE ]; then
+  topic "Downloading libpostal"
+  curl -sL "https://github.com/openvenues/libpostal/archive/$LIBPOSTAL_FILE" -o $LIBPOSTAL_FILE
+fi
+
+if [ ! -d "libpostal-$LIBPOSTAL_VERSION" ]; then
+  topic "Extracting libpostal"
+  tar -xf $LIBPOSTAL_FILE
+fi
+
+cd "libpostal-$LIBPOSTAL_VERSION"
+
+# Bootstrap if not already done
+if [ ! -f "configure" ]; then
+  topic "Running bootstrap.sh"
+  ./bootstrap.sh | indent
+fi
+
+# Configure with prefix
+if [ ! -f "Makefile" ]; then
+  topic "Configuring libpostal"
+  ./configure --prefix=$LIBPOSTAL_PREFIX --datadir=$LIBPOSTAL_PREFIX/data | indent
+fi
+
+# Make and install
+topic "Compiling libpostal"
+make -j4 | indent
+topic "Installing libpostal"
+make install | indent
+
+# Download the libpostal data if needed
+topic "Downloading libpostal data files"
+mkdir -p $LIBPOSTAL_PREFIX/data
+cd $LIBPOSTAL_PREFIX/data
+$VENDOR_DIR/libpostal/bin/libpostal_data download all | indent
+
+# Creating .profile.d script for runtime environment
+mkdir -p "$BUILD_DIR/.profile.d"
+cat > "$BUILD_DIR/.profile.d/libpostal.sh" << EOL
+export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:\$HOME/.heroku/vendor/libpostal/lib"
+export LIBRARY_PATH="\$LIBRARY_PATH:\$HOME/.heroku/vendor/libpostal/lib"
+export CPATH="\$CPATH:\$HOME/.heroku/vendor/libpostal/include"
+export LIBPOSTAL_DATA_DIR="\$HOME/.heroku/vendor/libpostal/data"
+export PATH="\$PATH:\$HOME/.heroku/vendor/libpostal/bin"
+EOL
+
+topic "libpostal installation completed"
