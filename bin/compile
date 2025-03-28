@@ -89,11 +89,22 @@ CFLAGS="-I/usr/include -I/usr/local/include -include stdint.h" make -j4 | indent
 topic "Installing libpostal"
 make install | indent
 
-# Download the libpostal data if needed
-topic "Downloading libpostal data files"
+# Download the libpostal data if needed - only US-specific data files
+topic "Downloading US-specific libpostal data files"
 mkdir -p $LIBPOSTAL_PREFIX/data
 cd $LIBPOSTAL_PREFIX
-$VENDOR_DIR/libpostal/bin/libpostal_data download all $LIBPOSTAL_PREFIX/data
+
+# Download only the base parser and language classifier
+topic "Downloading base language classifier"
+$VENDOR_DIR/libpostal/bin/libpostal_data download language_classifier $LIBPOSTAL_PREFIX/data
+
+topic "Downloading base address parser"
+$VENDOR_DIR/libpostal/bin/libpostal_data download parser $LIBPOSTAL_PREFIX/data
+
+# Download only US-specific data
+topic "Downloading US-specific data"
+$VENDOR_DIR/libpostal/bin/libpostal_data download language_classifier en $LIBPOSTAL_PREFIX/data
+$VENDOR_DIR/libpostal/bin/libpostal_data download country us $LIBPOSTAL_PREFIX/data
 
 # Creating .profile.d script for runtime environment
 mkdir -p "$BUILD_DIR/.profile.d"
