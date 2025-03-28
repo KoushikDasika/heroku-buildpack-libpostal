@@ -41,7 +41,7 @@ export LIBPOSTAL_PREFIX="$VENDOR_DIR/libpostal"
 mkdir -p $LIBPOSTAL_PREFIX
 
 # Download and install libpostal
-LIBPOSTAL_VERSION="1.1.0"
+LIBPOSTAL_VERSION="1.1"
 LIBPOSTAL_FILE="v$LIBPOSTAL_VERSION.tar.gz"
 
 topic "Installing libpostal $LIBPOSTAL_VERSION"
@@ -49,12 +49,12 @@ topic "Installing libpostal $LIBPOSTAL_VERSION"
 cd $CACHE_DIR
 if [ ! -f $LIBPOSTAL_FILE ]; then
   topic "Downloading libpostal"
-  curl -sL "https://github.com/openvenues/libpostal/archive/$LIBPOSTAL_FILE" -o $LIBPOSTAL_FILE
+  curl -sL "https://github.com/openvenues/libpostal/archive/refs/tags/v1.1.tar.gz" -o $LIBPOSTAL_FILE
 fi
 
 if [ ! -d "libpostal-$LIBPOSTAL_VERSION" ]; then
   topic "Extracting libpostal"
-  tar -xf $LIBPOSTAL_FILE
+  tar -xzf $LIBPOSTAL_FILE
 fi
 
 cd "libpostal-$LIBPOSTAL_VERSION"
