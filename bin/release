@@ -4,9 +4,9 @@
 cat << EOF
 ---
 config_vars:
-  LD_LIBRARY_PATH: /app/.heroku/vendor/libpostal/lib:$LD_LIBRARY_PATH
-  LIBRARY_PATH: /app/.heroku/vendor/libpostal/lib:$LIBRARY_PATH
-  CPATH: /app/.heroku/vendor/libpostal/include:$CPATH
+  LD_LIBRARY_PATH: /app/.heroku/vendor/libpostal/lib:/app/.heroku/vendor/other/lib
+  LIBRARY_PATH: /app/.heroku/vendor/libpostal/lib:/app/.heroku/vendor/other/lib
+  CPATH: /app/.heroku/vendor/libpostal/include:/app/.heroku/vendor/other/include
   LIBPOSTAL_DATA_DIR: /app/.heroku/vendor/libpostal/data
-  PATH: /app/.heroku/vendor/libpostal/bin:$PATH
+  PATH: /app/.heroku/vendor/libpostal/bin:/app/.heroku/vendor/other/bin
 EOF
